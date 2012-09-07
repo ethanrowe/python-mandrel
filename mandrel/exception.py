@@ -1,0 +1,3 @@
+class MissingBootstrapException(Exception):
+    pass
+
