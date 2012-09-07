@@ -1,3 +1,5 @@
+import os
+
 class TransformingList(object):
     __slots__ = ('_list', '_transformer')
 
@@ -40,3 +42,49 @@ class TransformingList(object):
 
     def count(self, v):
         return self._list.count(self._transformer(v))
+
+def find_files(name_or_names, paths, matches=None):
+    """Flexible file locator.
+
+    Looks for files with basename in name_or_names (which
+    can be a single string or an ordered container of strings).
+
+    Searches for those files in order across paths in order,
+    yielding at most one match per paths entry.
+
+    Exits after matches files have been found.  If matches is
+    undefined or less than zero, matches across all paths are
+    found.
+
+    Note that it's always restricted to one matching name_or_names
+    per path; you do not get all possible matches.
+
+    Parameters:
+        name_or_names: a string or ordered container of strings
+            corresponding to a prioritized list of file basenames
+            to look for.
+        dirs: a sequence of paths (directories) that are search for
+            name_or_names (in order).
+        matches: the limit on the number of matches.
+
+    The function is a generator, so the result is iterable.  Each
+    yielded value is the full path to a matching file.
+    """
+
+    if isinstance(name_or_names, basestring):
+        name_or_names = [name_or_names]
+
+    if matches is None:
+        matches = -1
+
+    for path in paths:
+        if matches == 0:
+            break
+
+        for name in name_or_names:
+            target = os.path.join(path, name)
+            if os.path.isfile(target):
+                yield target
+                matches -= 1
+                break
+
