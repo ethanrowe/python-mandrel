@@ -132,3 +132,62 @@ def get_configuration(name):
     """
     return load_configuration_file(find_configuration_file(name))
 
+class Configuration(object):
+    """Base class for managing component configuration.
+
+    Configuration provides:
+    * Simple wrapper around mandrel.config functionality for locating
+      and loading configuration from files.
+    * Easy, minimal interface for working with configuration as python
+      objects rather than dictionaries.
+    * Easy domain-specific configuration subclassing with minimal
+      fuss.
+    * Composable design to give flexibility in how configuration is shared
+      between/across components.
+    """
+    NAME = None
+
+    @classmethod
+    def load_configuration(cls):
+        return get_configuration(cls.NAME)
+
+    @classmethod
+    def get_configuration(cls, *chain):
+        return cls(cls.load_configuration(), *chain)
+
+    def __init__(self, configuration, *chain):
+        self.instance_set('configuration', configuration)
+        self.instance_set('chain', tuple(chain))
+
+    def configuration_set(self, attribute, value):
+        self.configuration[attribute] = value
+
+    def configuration_get(self, attribute):
+        return self.configuration[attribute]
+
+    def instance_set(self, attribute, value):
+        super(Configuration, self).__setattr__(attribute, value)
+
+    def instance_get(self, attribute):
+        return getattr(self, attribute)
+
+    def chained_get(self, attribute):
+        try:
+            return self.configuration_get(attribute)
+        except KeyError:
+            pass
+
+        for item in self.chain:
+            try:
+                return getattr(item, attribute)
+            except AttributeError:
+                pass
+
+        raise AttributeError, 'No such attribute: %s' % attribute
+
+    def __getattr__(self, attr):
+        return self.chained_get(attr)
+
+    def __setattr__(self, attr, val):
+        return self.configuration_set(attr, val)
+
