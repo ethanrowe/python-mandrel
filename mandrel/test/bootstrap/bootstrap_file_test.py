@@ -25,9 +25,14 @@ class TestBootstrapFile(unittest.TestCase):
                     self.assertEqual(spec[1], mandrel.bootstrap.BOOTSTRAP_FILE)
 
     def testFileEvaluation(self):
-        with utils.bootstrap_scenario(text="bootstrap.EVAL_CHECK = bootstrap\n") as spec:
+        with utils.bootstrap_scenario(text="bootstrap.EVAL_CHECK = bootstrap\nconfig.EVAL_CHECK = config") as spec:
             utils.refresh_bootstrapper()
+            # We check that the bootstrap file is evaluated in a scope with:
+            # - mandrel.bootstrap bound to local name "bootstrap"
+            # - mandrel.config bound to local name "config"
             self.assertIs(mandrel.bootstrap, mandrel.bootstrap.EVAL_CHECK)
+            self.assertIs(mandrel.config, mandrel.config.EVAL_CHECK)
+            
 
     def testDefaultSearchPath(self):
         with utils.bootstrap_scenario(dir='~') as spec:

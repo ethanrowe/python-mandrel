@@ -1,5 +1,6 @@
 import os
 import sys
+from mandrel import config
 from mandrel import exception
 from mandrel import util
 
@@ -24,7 +25,7 @@ def normalize_path(path):
 def parse_bootstrap_file():
     with open(BOOTSTRAP_FILE, 'rU') as source:
         code = compile(source.read(), BOOTSTRAP_FILE, 'exec')
-        eval(code, {'bootstrap': sys.modules[__name__]})
+        eval(code, {'bootstrap': sys.modules[__name__], 'config': config})
 
 (ROOT_PATH, BOOTSTRAP_FILE) = _find_bootstrap_base()
 SEARCH_PATHS = util.TransformingList(normalize_path)
