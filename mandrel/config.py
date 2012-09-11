@@ -155,6 +155,14 @@ class Configuration(object):
     def get_configuration(cls, *chain):
         return cls(cls.load_configuration(), *chain)
 
+    @classmethod
+    def get_logger(cls, name=None):
+        if name:
+            name = '%s.%s' % (cls.NAME, name)
+        else:
+            name = cls.NAME
+        return _get_bootstrapper().get_logger(name)
+
     def __init__(self, configuration, *chain):
         self.instance_set('configuration', configuration)
         self.instance_set('chain', tuple(chain))

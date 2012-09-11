@@ -10,6 +10,20 @@ class TestConfigurationClass(unittest.TestCase):
             get_configuration.assert_called_once_with(mock_name)
             self.assertEqual(get_configuration.return_value, result)
 
+    @mock.patch('mandrel.bootstrap')
+    def testGetLogger(self, bootstrap):
+        mock_name = str(mock.Mock(name='MockConfigurationName'))
+        with mock.patch('mandrel.config.Configuration.NAME', new=mock_name):
+            result = mandrel.config.Configuration.get_logger()
+            bootstrap.get_logger.assert_called_once_with(mock_name)
+            self.assertEqual(bootstrap.get_logger.return_value, result)
+
+            bootstrap.get_logger.reset_mock()
+            result = mandrel.config.Configuration.get_logger('some.nested.name')
+            bootstrap.get_logger.assert_called_once_with(mock_name + '.some.nested.name')
+            self.assertEqual(bootstrap.get_logger.return_value, result)
+
+
     def testBasicAttributes(self):
         config = mock.Mock()
         c = mandrel.config.Configuration(config)
@@ -95,3 +109,4 @@ class TestConfigurationClass(unittest.TestCase):
         c = type('ConfigSubclass', (mandrel.config.Configuration,), {})({})
         d = c.hot_copy()
         self.assertIs(type(c), type(d))
+
