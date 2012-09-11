@@ -1,0 +1,90 @@
+import unittest
+import mock
+import mandrel
+from mandrel import exception
+from mandrel.test import utils
+
+class TestLoggingBootstrap(unittest.TestCase):
+    def testDefaultLoggingCallback(self):
+        with utils.bootstrap_scenario() as spec:
+            utils.refresh_bootstrapper()
+            self.assertIs(mandrel.bootstrap.initialize_simple_logging, mandrel.bootstrap.DEFAULT_LOGGING_CALLBACK)
+
+
+    def testInitializeSimpleLogging(self):
+        with utils.bootstrap_scenario() as spec:
+            utils.refresh_bootstrapper()
+            with mock.patch('logging.basicConfig') as basic_config:
+                with mock.patch('logging.DEBUG') as debug:
+                    mandrel.bootstrap.initialize_simple_logging()
+                    basic_config.assert_called_once_with(level=debug)
+
+
+    def testFindLoggingConfiguration(self):
+        with utils.bootstrap_scenario() as spec:
+            utils.refresh_bootstrapper()
+            mandrel.bootstrap.LOGGING_CONFIG_BASENAME = str(mock.Mock(name='MockLoggingConfigPath'))
+            mandrel.bootstrap.SEARCH_PATHS = mock.Mock(name='MockSearchPaths')
+            with mock.patch('mandrel.util.find_files') as find_files:
+                path = mock.Mock(name='MockPath')
+                find_files.return_value = iter([path])
+                result = mandrel.bootstrap.find_logging_configuration()
+                find_files.assert_called_once_with(mandrel.bootstrap.LOGGING_CONFIG_BASENAME, mandrel.bootstrap.SEARCH_PATHS, matches=1)
+                self.assertEqual(path, result)
+
+                find_files.reset_mock()
+                find_files.return_value = iter([])
+                with self.assertRaises(exception.UnknownConfigurationException):
+                    mandrel.bootstrap.find_logging_configuration()
+
+
+    @mock.patch('logging.config.fileConfig')
+    def testConfigureLogging(self, file_config):
+        callback = mock.Mock(name='DefaultLoggingCallback')
+        with utils.bootstrap_scenario() as spec:
+            utils.refresh_bootstrapper()
+            mandrel.bootstrap.DEFAULT_LOGGING_CALLBACK = callback
+            with mock.patch('mandrel.bootstrap.find_logging_configuration') as finder:
+                self.assertEqual(False, mandrel.bootstrap.logging_is_configured())
+                path = str(mock.Mock(name='LoggingConfigPath'))
+                finder.return_value = path
+                mandrel.bootstrap.configure_logging()
+                self.assertEqual(0, len(mandrel.bootstrap.DEFAULT_LOGGING_CALLBACK.call_args_list))
+                file_config.assert_called_once_with(path)
+                self.assertEqual(True, mandrel.bootstrap.logging_is_configured())
+
+            utils.refresh_bootstrapper()
+            mandrel.bootstrap.DEFAULT_LOGGING_CALLBACK = callback
+            file_config.reset_mock()
+            with mock.patch('mandrel.bootstrap.find_logging_configuration') as finder:
+                self.assertEqual(False, mandrel.bootstrap.logging_is_configured())
+                def failure(*a, **k):
+                    raise exception.UnknownConfigurationException
+                finder.side_effect = failure
+                mandrel.bootstrap.configure_logging()
+                self.assertEqual(0, len(file_config.call_args_list))
+                callback.assert_called_once_with()
+                self.assertEqual(True, mandrel.bootstrap.logging_is_configured())
+
+
+    @mock.patch('logging.getLogger')
+    def testGetLogger(self, getLogger):
+        name = str(mock.Mock(name='SomeLoggerName'))
+        with utils.bootstrap_scenario() as spec:
+            utils.refresh_bootstrapper()
+            with mock.patch('mandrel.bootstrap.configure_logging') as configure_logging:
+                with mock.patch('mandrel.bootstrap.logging_is_configured') as logging_is_configured:
+                    logging_is_configured.return_value = False
+                    result = mandrel.bootstrap.get_logger(name)
+                    configure_logging.assert_called_once_with()
+                    getLogger.assert_called_once_with(name)
+                    self.assertEqual(getLogger.return_value, result)
+
+                    configure_logging.reset_mock()
+                    getLogger.reset_mock()
+                    logging_is_configured.return_value = True
+                    result = mandrel.bootstrap.get_logger(name)
+                    self.assertEqual(0, len(configure_logging.call_args_list))
+                    getLogger.assert_called_once_with(name)
+                    self.assertEqual(getLogger.return_value, result)
+

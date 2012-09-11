@@ -1,3 +1,4 @@
+import logging.config
 import os
 import sys
 from mandrel import config
@@ -8,6 +9,36 @@ __BOOTSTRAP_BASENAME = 'Mandrel.py'
 
 LOGGING_CONFIG_BASENAME = 'logging.cfg'
 __DEFAULT_SEARCH_PATHS = ['.']
+_LOGGING_CONFIGURED = False
+
+def logging_is_configured():
+    return _LOGGING_CONFIGURED
+
+def initialize_simple_logging():
+    logging.basicConfig(level=logging.DEBUG)
+
+def find_logging_configuration():
+    for path in util.find_files(LOGGING_CONFIG_BASENAME, SEARCH_PATHS, matches=1):
+        return path
+    raise exception.UnknownConfigurationException, "Cannot find logging configuration file(s) '%s'" % LOGGING_CONFIG_BASENAME
+
+DEFAULT_LOGGING_CALLBACK = initialize_simple_logging
+
+def configure_logging():
+    try:
+        path = find_logging_configuration()
+        logging.config.fileConfig(path)
+    except exception.UnknownConfigurationException:
+        DEFAULT_LOGGING_CALLBACK()
+
+    global _LOGGING_CONFIGURED
+    _LOGGING_CONFIGURED = True
+
+def get_logger(name=None):
+    if not logging_is_configured():
+        configure_logging()
+    return logging.getLogger(name)
+
 
 def _find_bootstrap_base():
     current = os.path.realpath('.')
