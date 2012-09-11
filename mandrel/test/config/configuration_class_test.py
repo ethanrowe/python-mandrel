@@ -85,3 +85,13 @@ class TestConfigurationClass(unittest.TestCase):
         self.assertEqual(loader.return_value, c.configuration)
         self.assertEqual(chain, c.chain)
 
+    def testHotCopy(self):
+        a = mandrel.config.Configuration({'foo': 'bar'})
+        b = a.hot_copy()
+        self.assertIs(type(a), type(b))
+        self.assertEqual({}, b.configuration)
+        self.assertEqual((a,), b.chain)
+
+        c = type('ConfigSubclass', (mandrel.config.Configuration,), {})({})
+        d = c.hot_copy()
+        self.assertIs(type(c), type(d))

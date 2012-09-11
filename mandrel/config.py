@@ -191,3 +191,6 @@ class Configuration(object):
     def __setattr__(self, attr, val):
         return self.configuration_set(attr, val)
 
+    def hot_copy(self):
+        return type(self)({}, self)
+
