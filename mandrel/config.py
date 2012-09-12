@@ -144,19 +144,77 @@ class Configuration(object):
       fuss.
     * Composable design to give flexibility in how configuration is shared
       between/across components.
+
+    Extend this class and override NAME in order to get automatic
+    loading and log configuration.
+
+    If you want a class that provides a full range of defaults such that
+    it could function in the complete absence of configuration input,
+    consider extending ForgivingConfiguration instead.
+
+    By default, when getting an attribute, if the attribute does not
+    exist on the instance, it is looked for (as a key) within the
+    instance's configuration dictionary.  If not found there, the
+    objects in the instance's chain are checked for the attribute
+    in turn.
+
+    When setting an attribute on an instance, the effect is to set
+    that attribute on the underlying configuration dictionary (as
+    a key/value pair), rather than on the instance itself.
     """
     NAME = None
 
     @classmethod
     def load_configuration(cls):
+        """Returns the best configuration dictionary available for the class.
+
+        Uses the class constant NAME as the name lookup for the configuration
+        file.
+
+        Note that this *always* goes to the file system for configuration; no
+        caching takes place.  Manage your own state in the manner best suited
+        to your problem domain.
+
+        Raises an UnknownConfigurationException if no such configuration can
+        be found.  Additionally, since configuration depends on bootstrapping,
+        this is subject to any exceptions bootstrapping may bring.
+        """
         return get_configuration(cls.NAME)
 
     @classmethod
     def get_configuration(cls, *chain):
+        """Returns an instance prepped with the best configuration available.
+
+        The instance returned will use the configuration dictionary found via
+        get_configuration, and will have the specified chain.
+
+        Raises an UnknownConfigurationException is no such configuration can
+        be found.  Additionally, since configuration depends on bootstrapping,
+        this is subject to any exceptions bootstrapping may bring.
+        """
         return cls(cls.load_configuration(), *chain)
 
     @classmethod
     def get_logger(cls, name=None):
+        """Returns a logger according to the class' constant NAME.
+
+        This uses the mandrel.bootstrap.get_logger() functionality
+        to work nicely within the bootstrapping and logging configuration
+        design.
+
+        The logger name requested is always relative to the class'
+        constant NAME; if you do not provide a name, then you'll get
+        the result of mandrel.bootstrap.get_logger(cls.NAME).
+        If you provide a name, it will be treated as a child of
+        that name.  So that name "foo" will get the result of
+        mandrel.bootstrap.get_logger('%s.foo' % cls.NAME)
+
+        Note that the logger is always retrieved from the logging subsystem;
+        no caching is performed within the Configuration class itself.
+
+        This is subject to any exceptions that bootstrapping itself
+        is subject to.
+        """
         if name:
             name = '%s.%s' % (cls.NAME, name)
         else:
@@ -164,22 +222,28 @@ class Configuration(object):
         return _get_bootstrapper().get_logger(name)
 
     def __init__(self, configuration, *chain):
+        """Initialize the object with a configuration dictionary and any number of chain members."""
         self.instance_set('configuration', configuration)
         self.instance_set('chain', tuple(chain))
 
     def configuration_set(self, attribute, value):
+        """Sets the attribute and value as a key,value pair on the configuration dictionary."""
         self.configuration[attribute] = value
 
     def configuration_get(self, attribute):
+        """Retrieves the requested attribute (as a key) from the configuration dictionary."""
         return self.configuration[attribute]
 
     def instance_set(self, attribute, value):
+        """Sets the attribute and value on the instance directly."""
         super(Configuration, self).__setattr__(attribute, value)
 
     def instance_get(self, attribute):
+        """Returns the attribute from the instance directly."""
         return getattr(self, attribute)
 
     def chained_get(self, attribute):
+        """Returns the 'best' value for the attribute, consulting the configuration then the chain in turn."""
         try:
             return self.configuration_get(attribute)
         except KeyError:
@@ -200,5 +264,39 @@ class Configuration(object):
         return self.configuration_set(attr, val)
 
     def hot_copy(self):
+        """Returns a new instance of the same class, using self as the first point in the chain.
+
+        That "hot copy" is logically a copy of self, but with a distinct dictionary such that
+        mutations to the copy do not affect the original.
+
+        However, because the original exposes its state through chaining, its possible to
+        indirectly alter the state of the original configuration.
+        """
         return type(self)({}, self)
+
+class ForgivingConfiguration(Configuration):
+    """Configuration class for defaults or empty configs.
+
+    If your configuration is such that you can cope with an empty/missing
+    configuration, presumably by providing sane defaults, use the ForgivingConfiguration
+    instead of Configuration.
+
+    ForgivingConfiguration is identical to its parent class Configuration, except
+    that in the event of an UnknownConfigurationException, load_configuration() will
+    return an empty dict instead of failing.
+
+    Enforcing reasonable application-specific defaults then is a matter for
+    your implementation.
+    """
+
+    @classmethod
+    def load_configuration(cls):
+        """Return the best configuration dictionary available from files.
+        
+        If no configuration file can be found, an empty dictionary is returned.
+        """
+        try:
+            return super(ForgivingConfiguration, cls).load_configuration()
+        except exception.UnknownConfigurationException:
+            return {}
 

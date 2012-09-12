@@ -1,6 +1,7 @@
 import unittest
 import mock
 import mandrel.config
+from mandrel import exception
 
 class TestConfigurationClass(unittest.TestCase):
     @mock.patch('mandrel.config.get_configuration')
@@ -56,6 +57,20 @@ class TestConfigurationClass(unittest.TestCase):
         self.assertEqual(val, c.instance_get(attr))
         self.assertEqual(val, c.__dict__[attr])
 
+
+    def testInstanceVersusConfiguration(self):
+        c = mandrel.config.Configuration({})
+        attr = str(mock.Mock(name='Attr'))
+        a = mock.Mock(name='A')
+        b = mock.Mock(name='B')
+        c.configuration_set(attr, a)
+        self.assertEqual(a, getattr(c, attr))
+        c.instance_set(attr, b)
+        self.assertEqual(b, getattr(c, attr))
+        self.assertEqual(b, c.instance_get(attr))
+        self.assertEqual(a, c.configuration_get(attr))
+
+
     def testAttributeLookup(self):
         val = mock.Mock(name='Value')
         for getter in (lambda o: o.chained_get('foo'), lambda o: o.foo):
@@ -109,4 +124,28 @@ class TestConfigurationClass(unittest.TestCase):
         c = type('ConfigSubclass', (mandrel.config.Configuration,), {})({})
         d = c.hot_copy()
         self.assertIs(type(c), type(d))
+
+
+    def testForgivingConfiguration(self):
+        self.assertEqual(True, issubclass(mandrel.config.ForgivingConfiguration, mandrel.config.Configuration))
+
+
+    @mock.patch('mandrel.config.get_configuration')
+    def testUnknownConfigurationExceptionHandling(self, get_configuration):
+        def fail(*a, **b):
+            raise exception.UnknownConfigurationException
+        get_configuration.side_effect = fail
+        
+        class A(mandrel.config.Configuration):
+            NAME = 'a_foo'
+
+        class B(mandrel.config.ForgivingConfiguration):
+            NAME = 'b_foo'
+
+        with self.assertRaises(exception.UnknownConfigurationException):
+            A.load_configuration()
+
+        b = B.load_configuration()
+        self.assertEqual((('b_foo',), {}), get_configuration.call_args_list[-1])
+        self.assertEqual({}, b)
 
