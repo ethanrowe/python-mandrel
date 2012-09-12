@@ -20,6 +20,12 @@ class TestLoggingBootstrap(unittest.TestCase):
                     basic_config.assert_called_once_with(level=debug)
 
 
+    def testDisableExistingLoggers(self):
+        with utils.bootstrap_scenario() as spec:
+            utils.refresh_bootstrapper()
+            self.assertEqual(True, mandrel.bootstrap.DISABLE_EXISTING_LOGGERS)
+
+
     def testFindLoggingConfiguration(self):
         with utils.bootstrap_scenario() as spec:
             utils.refresh_bootstrapper()
@@ -41,20 +47,23 @@ class TestLoggingBootstrap(unittest.TestCase):
     @mock.patch('logging.config.fileConfig')
     def testConfigureLogging(self, file_config):
         callback = mock.Mock(name='DefaultLoggingCallback')
+        disabled = mock.Mock(name='DisableExistingLogger')
         with utils.bootstrap_scenario() as spec:
             utils.refresh_bootstrapper()
             mandrel.bootstrap.DEFAULT_LOGGING_CALLBACK = callback
+            mandrel.bootstrap.DISABLE_EXISTING_LOGGERS = disabled
             with mock.patch('mandrel.bootstrap.find_logging_configuration') as finder:
                 self.assertEqual(False, mandrel.bootstrap.logging_is_configured())
                 path = str(mock.Mock(name='LoggingConfigPath'))
                 finder.return_value = path
                 mandrel.bootstrap.configure_logging()
                 self.assertEqual(0, len(mandrel.bootstrap.DEFAULT_LOGGING_CALLBACK.call_args_list))
-                file_config.assert_called_once_with(path)
+                file_config.assert_called_once_with(path, disable_existing_loggers=disabled)
                 self.assertEqual(True, mandrel.bootstrap.logging_is_configured())
 
             utils.refresh_bootstrapper()
             mandrel.bootstrap.DEFAULT_LOGGING_CALLBACK = callback
+            mandrel.bootstrap.DISABLE_EXISTING_LOGGERS = disabled
             file_config.reset_mock()
             with mock.patch('mandrel.bootstrap.find_logging_configuration') as finder:
                 self.assertEqual(False, mandrel.bootstrap.logging_is_configured())

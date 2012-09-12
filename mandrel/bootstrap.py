@@ -23,14 +23,14 @@ def find_logging_configuration():
     raise exception.UnknownConfigurationException, "Cannot find logging configuration file(s) '%s'" % LOGGING_CONFIG_BASENAME
 
 DEFAULT_LOGGING_CALLBACK = initialize_simple_logging
+DISABLE_EXISTING_LOGGERS = True
 
 def configure_logging():
     try:
         path = find_logging_configuration()
-        logging.config.fileConfig(path)
+        logging.config.fileConfig(path, disable_existing_loggers=DISABLE_EXISTING_LOGGERS)
     except exception.UnknownConfigurationException:
         DEFAULT_LOGGING_CALLBACK()
-
     global _LOGGING_CONFIGURED
     _LOGGING_CONFIGURED = True
 
