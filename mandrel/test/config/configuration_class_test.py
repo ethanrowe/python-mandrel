@@ -1,9 +1,10 @@
 import unittest
 import mock
 import mandrel.config
+from mandrel.test import utils
 from mandrel import exception
 
-class TestConfigurationClass(unittest.TestCase):
+class TestConfigurationClass(utils.TestCase):
     @mock.patch('mandrel.config.get_configuration')
     def testLoadConfiguration(self, get_configuration):
         with mock.patch('mandrel.config.Configuration.NAME') as mock_name:
@@ -74,13 +75,11 @@ class TestConfigurationClass(unittest.TestCase):
     def testAttributeLookup(self):
         val = mock.Mock(name='Value')
         for getter in (lambda o: o.chained_get('foo'), lambda o: o.foo):
-            with self.assertRaises(AttributeError):
-                getter(mandrel.config.Configuration({}))
+            self.assertRaises(AttributeError, lambda: getter(mandrel.config.Configuration({})))
 
             self.assertEqual(val, getter(mandrel.config.Configuration({'foo': val})))
 
-            with self.assertRaises(AttributeError):
-                getter(mandrel.config.Configuration({}, object(), object()))
+            self.assertRaises(AttributeError, lambda: getter(mandrel.config.Configuration({}, object(), object())))
 
             good = mock.Mock(name='ChainMember')
             good.foo = val
@@ -142,8 +141,7 @@ class TestConfigurationClass(unittest.TestCase):
         class B(mandrel.config.ForgivingConfiguration):
             NAME = 'b_foo'
 
-        with self.assertRaises(exception.UnknownConfigurationException):
-            A.load_configuration()
+        self.assertRaises(exception.UnknownConfigurationException, A.load_configuration)
 
         b = B.load_configuration()
         self.assertEqual((('b_foo',), {}), get_configuration.call_args_list[-1])

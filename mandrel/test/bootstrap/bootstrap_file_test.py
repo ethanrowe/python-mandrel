@@ -4,11 +4,10 @@ import unittest
 import mandrel.exception
 from mandrel.test import utils
 
-class TestBootstrapFile(unittest.TestCase):
+class TestBootstrapFile(utils.TestCase):
     def testNoFile(self):
         with utils.workdir(dir='~') as path:
-            with self.assertRaises(mandrel.exception.MissingBootstrapException):
-                utils.refresh_bootstrapper()
+            self.assertRaises(mandrel.exception.MissingBootstrapException, utils.refresh_bootstrapper)
 
     def testRootImmediate(self):
         with utils.bootstrap_scenario(dir='~') as spec:

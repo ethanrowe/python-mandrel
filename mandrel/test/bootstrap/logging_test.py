@@ -4,7 +4,7 @@ import mandrel
 from mandrel import exception
 from mandrel.test import utils
 
-class TestLoggingBootstrap(unittest.TestCase):
+class TestLoggingBootstrap(utils.TestCase):
     def testDefaultLoggingCallback(self):
         with utils.bootstrap_scenario() as spec:
             utils.refresh_bootstrapper()
@@ -40,8 +40,7 @@ class TestLoggingBootstrap(unittest.TestCase):
 
                 find_files.reset_mock()
                 find_files.return_value = iter([])
-                with self.assertRaises(exception.UnknownConfigurationException):
-                    mandrel.bootstrap.find_logging_configuration()
+                self.assertRaises(exception.UnknownConfigurationException, lambda: mandrel.bootstrap.find_logging_configuration())
 
 
     @mock.patch('logging.config.fileConfig')

@@ -3,6 +3,12 @@ import os
 import shutil
 import tempfile
 import mandrel
+import unittest
+
+class TestCase(unittest.TestCase):
+    def assertIs(self, a, b):
+        # python 2.6/2.7 compatibility
+        self.assertTrue(a is b)
 
 @contextlib.contextmanager
 def tempdir(dir=None):

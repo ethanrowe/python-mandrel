@@ -4,7 +4,7 @@ import mandrel
 from mandrel.test import utils
 import os
 
-class TestSearchPathBehavior(unittest.TestCase):
+class TestSearchPathBehavior(utils.TestCase):
     @mock.patch('mandrel.util.TransformingList')
     def testTargetedListStructure(self, mock_list):
         with utils.bootstrap_scenario() as spec:
