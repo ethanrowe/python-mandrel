@@ -19,13 +19,20 @@ setup(
     test_suite='mandrel.test',
     classifiers=[
         "Development Status :: 3 - Alpha",
-        "Topic :: Utilities",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
         "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
+        "Topic :: Utilities",
     ],
     install_requires=[
-        'setuptools',
         'mock',
         'PyYAML',
+    ],
+    data_files=[
+        'LICENSE.txt',
     ],
 )
 
