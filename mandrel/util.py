@@ -88,3 +88,29 @@ def find_files(name_or_names, paths, matches=None):
                 matches -= 1
                 break
 
+def class_to_fqn(cls):
+    """Returns the fully qualified name for cls"""
+    return '%s.%s' % (cls.__module__, cls.__name__)
+
+def object_to_fqn(obj):
+    """Returns the fully qualified name for the class of obj"""
+    return class_to_fqn(type(obj))
+
+def get_by_fqn(fqn):
+    """Returns the object referred to by fully-qualified name fqn"""
+    names = fqn.split('.')
+    import_name = names.pop(0)
+    thingy = __import__(import_name)
+    for name in names:
+        import_name += '.%s' % name
+        thingy = _lookup(thingy, name, import_name)
+    return thingy
+
+def _lookup(module, name, import_name):
+    try:
+        return getattr(module, name)
+    except AttributeError:
+        __import__(import_name)
+        return getattr(module, name)
+
+
