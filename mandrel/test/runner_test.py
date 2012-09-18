@@ -99,3 +99,40 @@ class TestRunner(unittest.TestCase):
         runner.AbstractRunner.launch()
         run.assert_called_once_with()
 
+    @mock.patch('mandrel.util.get_by_fqn')
+    def testCallableRunner(self, get_by_fqn):
+        target = str(mock.Mock(name='MockTarget'))
+        opts = [str(mock.Mock(name='Arg%d' % x)) for x in xrange(3)]
+        result = runner.CallableRunner().execute(target, opts)
+        get_by_fqn.assert_called_once_with(target)
+        get_by_fqn.return_value.assert_called_once_with(opts)
+        self.assertEqual(get_by_fqn.return_value.return_value, result)
+
+    @mock.patch('__builtin__.globals')
+    @mock.patch('sys.argv', new=['foo', 'bar', 'bah'])
+    @mock.patch('__builtin__.execfile')
+    def testScriptRunner(self, mock_exec, mock_globals):
+        target = str(mock.Mock(name='MockTarget'))
+        opts = [str(mock.Mock(name='Arg%d' % x)) for x in xrange(3)]
+        glb = {'foo': mock.Mock(), 'bar': mock.Mock(), '__file__': mock.Mock(), '__name__': mock.Mock()}
+        mock_globals.side_effect = lambda: dict(glb)
+        exp = dict(glb)
+        exp['__file__'] = target
+        exp['__name__'] = '__main__'
+
+        result = runner.ScriptRunner().execute(target, opts)
+        mock_exec.assert_called_once_with(target, exp)
+        self.assertEqual(mock_exec.return_value, result)
+        # Should add args at sys.argv[1:]
+        self.assertEqual(['foo'] + opts, sys.argv)
+
+    @mock.patch('mandrel.runner.ScriptRunner.launch')
+    @mock.patch('mandrel.runner.CallableRunner.launch')
+    def testLaunchFunctions(self, mock_callable, mock_script):
+        runner.launch_callable()
+        mock_callable.assert_called_once_with()
+        self.assertEqual(0, len(mock_script.call_args_list))
+        mock_callable.reset_mock()
+        runner.launch_script()
+        mock_script.assert_called_once_with()
+        self.assertEqual(0, len(mock_callable.call_args_list))

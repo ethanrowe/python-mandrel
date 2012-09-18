@@ -39,6 +39,7 @@ class AbstractRunner(object):
 
 
     def configure_parser(self, parser):
+        parser.usage = '%prog [OPTIONS] target [TARGET_OPTIONS]'
         parser.add_option('-s', '--search_path',
                           type='str',
                           action='callback',
@@ -90,3 +91,34 @@ class AbstractRunner(object):
     @classmethod
     def launch(cls):
         cls().run()
+
+
+class CallableRunner(AbstractRunner):
+    def get_callable(self, target):
+        return util.get_by_fqn(target)
+
+    def execute(self, target, args):
+        runnable = self.get_callable(target)
+        return runnable(args)
+
+
+class ScriptRunner(AbstractRunner):
+    def prepare_environment(self, args):
+        sys.argv[1:] = args
+
+    def execute_script(self, script):
+        glb = globals()
+        glb.update(__name__='__main__', __file__=script)
+        return execfile(script, glb)
+
+    def execute(self, target, args):
+        self.prepare_environment(args)
+        return self.execute_script(target)
+
+
+def launch_callable():
+    CallableRunner.launch()
+
+def launch_script():
+    ScriptRunner.launch()
+
