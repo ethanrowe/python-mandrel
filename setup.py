@@ -52,5 +52,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         'mock',
         'PyYAML',
     ],
+    entry_points={
+        'console_scripts': [
+            'mandrel-runner = mandrel.runner:launch_callable',
+            'mandrel-script = mandrel.runner:launch_script',
+        ],
+    },
 )
 
