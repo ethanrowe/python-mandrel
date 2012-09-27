@@ -15,9 +15,20 @@ class TestLoggingBootstrap(utils.TestCase):
         with utils.bootstrap_scenario() as spec:
             utils.refresh_bootstrapper()
             with mock.patch('logging.basicConfig') as basic_config:
-                with mock.patch('logging.DEBUG') as debug:
-                    mandrel.bootstrap.initialize_simple_logging()
-                    basic_config.assert_called_once_with(level=debug)
+                with mock.patch('mandrel.bootstrap.DEFAULT_LOGGING_LEVEL') as default_level:
+                    with mock.patch('mandrel.bootstrap.DEFAULT_LOGGING_FORMAT') as default_format:
+                        with mock.patch('mandrel.bootstrap.DEFAULT_LOGGING_DATE_FORMAT') as default_date_fmt:
+                            mandrel.bootstrap.initialize_simple_logging()
+                            basic_config.assert_called_once_with(format=default_format, datefmt=default_date_fmt, level=default_level)
+
+
+    @mock.patch('logging.INFO')
+    def testSimpleLoggingDefaults(self, mock_info):
+        with utils.bootstrap_scenario() as spec:
+            utils.refresh_bootstrapper()
+            self.assertEqual(mock_info, mandrel.bootstrap.DEFAULT_LOGGING_LEVEL)
+            self.assertEqual('%(asctime)s.%(msecs)04d #%(process)d - %(levelname)s %(name)s: %(message)s', mandrel.bootstrap.DEFAULT_LOGGING_FORMAT)
+            self.assertEqual('%Y-%m-%dT%H:%M:%S', mandrel.bootstrap.DEFAULT_LOGGING_DATE_FORMAT)
 
 
     def testDisableExistingLoggers(self):
