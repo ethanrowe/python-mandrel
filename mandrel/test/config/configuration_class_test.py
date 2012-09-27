@@ -102,6 +102,21 @@ class TestConfigurationClass(utils.TestCase):
         c.blah = a
         self.assertEqual(a, c.configuration['blah'])
 
+    def testAttributePropertySet(self):
+        cls = type('AttributePropertyTestConfiguration', (mandrel.config.Configuration,), {})
+        cls.foo = property(lambda self: self.configuration_get('blah'),
+                           lambda self, val: self.configuration_set('blah', val))
+        orig = mock.Mock(name='A')
+        new = mock.Mock(name='B')
+        x = cls({'blah': orig, 'foo': 'bar'})
+        y = cls({'blah': orig})
+        self.assertEqual(orig, x.foo)
+        self.assertEqual(orig, y.foo)
+        x.foo = new
+        self.assertEqual(new, x.foo)
+        self.assertEqual({'blah': new, 'foo': 'bar'}, x.configuration)
+        self.assertEqual(orig, y.foo)
+
     @mock.patch('mandrel.config.Configuration.load_configuration')
     def testGetConfiguration(self, loader):
         c = mandrel.config.Configuration.get_configuration()
