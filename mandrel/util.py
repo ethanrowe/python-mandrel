@@ -1,4 +1,5 @@
 import os
+import re
 
 class TransformingList(object):
     __slots__ = ('_list', '_transformer')
@@ -113,4 +114,39 @@ def _lookup(module, name, import_name):
         __import__(import_name)
         return getattr(module, name)
 
+def convention_loader(format_string):
+    """Returns a function that can dynamically load structures by naming convention.
+
+    An example is most helpful:
+        loader = convention_loader('farm.critters.deluxe.%s_animal')
+        cowie = loader('moo')
+        assert cowie is sys.modules['farm.critters.deluxe.moo_animal']
+
+    This is helpful if you want to use lazy-loading techniques that enforce
+    particular naming conventions.
+
+    Parameters:
+        format_string: A format string containing a fully qualified python name,
+           with a "%s" for where varying names should be substituted.
+
+    Returns:
+        A function that can accept a single string argument which, using `get_by_fqn`,
+        will return the structure referred to by the result of substituting the
+        string into the format_string.
+
+    Raises a TypeError if the format_string is blank, or if the format_string does
+    not contain one and only one '%s' within it.
+    """
+    if not format_string:
+        raise TypeError, 'format_string cannot be blank'
+    if re.findall('%.', format_string) != ['%s']:
+        raise TypeError, 'format_string must contain one and only one "%s" token'
+
+    def func(name):
+        return get_by_fqn(format_string % name)
+
+    func.__doc__ = "Returns python structure named by name formatted by %s." % format_string
+    func.__name__ = 'formatted_convention_loader'
+
+    return func
 
