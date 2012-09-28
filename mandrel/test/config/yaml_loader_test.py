@@ -17,7 +17,7 @@ class TestConfigYamlLoader(unittest.TestCase):
                     safe_load.file_contents = f.read()
                     return safe_load.return_value
                 safe_load.side_effect = loader
-                result = config.read_yaml_path(filepath)
+                result = config.core.read_yaml_path(filepath)
                 # yaml.safe_load called once
                 self.assertEqual(1, len(safe_load.call_args_list))
                 # it's first arg appears to be a reader of our file

@@ -261,6 +261,9 @@ class Configuration(object):
         return self.chained_get(attr)
 
     def __setattr__(self, attr, val):
+        if hasattr(getattr(self.__class__, attr, None), '__set__'):
+            # Descriptor support
+            return object.__setattr__(self, attr, val)
         return self.configuration_set(attr, val)
 
     def hot_copy(self):

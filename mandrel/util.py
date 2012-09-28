@@ -1,4 +1,5 @@
 import os
+import re
 
 class TransformingList(object):
     __slots__ = ('_list', '_transformer')
@@ -113,4 +114,93 @@ def _lookup(module, name, import_name):
         __import__(import_name)
         return getattr(module, name)
 
+def convention_loader(format_string):
+    """Returns a function that can dynamically load structures by naming convention.
+
+    An example is most helpful:
+        loader = convention_loader('farm.critters.deluxe.%s_animal')
+        cowie = loader('moo')
+        assert cowie is sys.modules['farm.critters.deluxe.moo_animal']
+
+    This is helpful if you want to use lazy-loading techniques that enforce
+    particular naming conventions.
+
+    Parameters:
+        format_string: A format string containing a fully qualified python name,
+           with a "%s" for where varying names should be substituted.
+
+    Returns:
+        A function that can accept a single string argument which, using `get_by_fqn`,
+        will return the structure referred to by the result of substituting the
+        string into the format_string.
+
+    Raises a TypeError if the format_string is blank, or if the format_string does
+    not contain one and only one '%s' within it.
+    """
+    if not format_string:
+        raise TypeError, 'format_string cannot be blank'
+    if re.findall('%.', format_string) != ['%s']:
+        raise TypeError, 'format_string must contain one and only one "%s" token'
+
+    def func(name):
+        return get_by_fqn(format_string % name)
+
+    func.__doc__ = "Returns python structure named by name formatted by %s." % format_string
+    func.__name__ = 'formatted_convention_loader'
+
+    return func
+
+
+def harness_loader(loader_callable):
+    """Constructs functions for dynamic loading and callback invocation.
+
+    Example:
+        @harness_loader(convention_loader('app.plugins.%s_widget.Widget'))
+        def harness(widget_cls, name):
+            return widget_cls(name)
+
+    In the example, this:
+        x = harness('foo', 'Fooey!')
+
+    is roughly equivalent to, but less sucky for some workflows than, this:
+        import app.plugins.foo_widget
+        x = app.plugins.foo_widget.Widget('Fooey!')
+
+    This lets you specify a loader_callable that knows how to take a name
+    and load something with it, and provide a callback function that does
+    something with that loaded thing along with arbitrary parameters.  You
+    get a function that puts it all together, so it becomes easy to write
+    dynamic loader functions that enforce naming conventions, enforce a
+    common interface for pulling structures into a framework (hence the
+    name "harness_loader"), etc.
+
+    Parameters:
+        loader_callable: a callable thing that can take a single parameter and
+            return some arbitrary structure which you want your "harness" to
+            consume in some standard way.
+
+    Returns:
+        A function that looks like:
+
+        Parameters:
+            callback: a callable that you want to invoke on the result
+               of the loader_callable invocation.
+
+        Returns:
+            A function that looks like:
+                Parameters:
+                    name: the name of the thing to load via the loader_callable.
+                    *args: any positional arguments to pass through to the callback.
+                    *kw: any keyword arguments to pass through to the callback.
+                
+                Returns:
+                    The result of invoking the callback with the loaded item,
+                    *args, and *kw.
+    """
+    def harness_builder(callback):
+        def harness(name, *args, **kw):
+            target = loader_callable(name)
+            return callback(target, *args, **kw)
+        return harness
+    return harness_builder
 
