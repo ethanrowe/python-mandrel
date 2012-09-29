@@ -10,7 +10,13 @@ setup(
     license = "MIT",
     keywords = "bootstrap configuration setup",
     url = "https://github.com/ethanrowe/python-mandrel",
-    packages=['mandrel'],
+    packages=['mandrel',
+              'mandrel.config',
+              'mandrel.test',
+              'mandrel.test.bootstrap',
+              'mandrel.test.config',
+              'mandrel.test.util',
+    ],
     long_description="""
 # Mandrel (python-mandrel) #
 
