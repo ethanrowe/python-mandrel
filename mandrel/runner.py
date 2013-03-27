@@ -75,7 +75,7 @@ class AbstractRunner(object):
                           action='callback',
                           help="Sets mandrel.bootstrap.LOGGING_CONFIG_BASENAME to value.",
                           callback=self.handle_log_config)
-
+        parser.disable_interspersed_args()
 
     def process_options(self):
         ops, args = self.parser.parse_args()
