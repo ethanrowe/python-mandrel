@@ -195,19 +195,31 @@ class Configuration(object):
         return cls(cls.load_configuration(), *chain)
 
     @classmethod
+    def get_logger_name(cls, name=None):
+        """Returns a logger name according to the class' constant NAME.
+
+        The logger name requested is always relative to the class'
+        constant NAME; if you do not provide a name, then you'll get
+        `cls.NAME`.
+
+        If you provide a name, it will be treated as a child of
+        that class name.  So the name "foo" will get the result of
+        `'%s.foo' % cls.NAME`
+        """
+        if name is None:
+            return cls.NAME
+        return '%s.%s' % (cls.NAME, name)
+
+    @classmethod
     def get_logger(cls, name=None):
-        """Returns a logger according to the class' constant NAME.
+        """Returns a logger based on `get_logger_name`.
+
+        Returns a logger object based on the `name` determined via the
+        `get_logger_name` method.  See that method for naming rules.
 
         This uses the mandrel.bootstrap.get_logger() functionality
         to work nicely within the bootstrapping and logging configuration
         design.
-
-        The logger name requested is always relative to the class'
-        constant NAME; if you do not provide a name, then you'll get
-        the result of mandrel.bootstrap.get_logger(cls.NAME).
-        If you provide a name, it will be treated as a child of
-        that name.  So that name "foo" will get the result of
-        mandrel.bootstrap.get_logger('%s.foo' % cls.NAME)
 
         Note that the logger is always retrieved from the logging subsystem;
         no caching is performed within the Configuration class itself.
@@ -216,9 +228,9 @@ class Configuration(object):
         is subject to.
         """
         if name:
-            name = '%s.%s' % (cls.NAME, name)
+            name = cls.get_logger_name(name)
         else:
-            name = cls.NAME
+            name = cls.get_logger_name()
         return _get_bootstrapper().get_logger(name)
 
     def __init__(self, configuration, *chain):
