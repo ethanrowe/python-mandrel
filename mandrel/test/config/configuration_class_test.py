@@ -12,20 +12,33 @@ class TestConfigurationClass(utils.TestCase):
             get_configuration.assert_called_once_with(mock_name)
             self.assertEqual(get_configuration.return_value, result)
 
-    @mock.patch('mandrel.bootstrap')
-    def testGetLogger(self, bootstrap):
+    def testGetLoggerName(self):
         mock_name = str(mock.Mock(name='MockConfigurationName'))
         with mock.patch('mandrel.config.core.Configuration.NAME', new=mock_name):
+            result = mandrel.config.core.Configuration.get_logger_name()
+            self.assertEqual(mock_name, result)
+
+            result = mandrel.config.core.Configuration.get_logger_name('some.nested.name')
+            self.assertEqual(mock_name + '.some.nested.name', result)
+
+    @mock.patch('mandrel.bootstrap')
+    @mock.patch('mandrel.config.core.Configuration.get_logger_name')
+    def testGetLogger(self, get_logger_name, bootstrap):
+        mock_name = str(mock.Mock(name='AnotherMockConfigurationName'))
+        with mock.patch('mandrel.config.core.Configuration.NAME', new=mock_name):
             result = mandrel.config.core.Configuration.get_logger()
-            bootstrap.get_logger.assert_called_once_with(mock_name)
+            get_logger_name.assert_called_once_with()
+            bootstrap.get_logger.assert_called_once_with(get_logger_name.return_value)
             self.assertEqual(bootstrap.get_logger.return_value, result)
 
+            get_logger_name.reset_mock()
             bootstrap.get_logger.reset_mock()
             result = mandrel.config.core.Configuration.get_logger('some.nested.name')
-            bootstrap.get_logger.assert_called_once_with(mock_name + '.some.nested.name')
+            get_logger_name.assert_called_once_with('some.nested.name')
+            bootstrap.get_logger.assert_called_once_with(get_logger_name.return_value)
             self.assertEqual(bootstrap.get_logger.return_value, result)
 
-
+    
     def testBasicAttributes(self):
         config = mock.Mock()
         c = mandrel.config.Configuration(config)
