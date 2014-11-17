@@ -1,3 +1,7 @@
+2.0.0
+
+* mandrel-runner uses return value of callable as the exit code.
+
 0.1.1
 
 * Adding travis CI build support for 2.6/2.7 testing
