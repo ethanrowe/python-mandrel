@@ -1,3 +1,7 @@
+0.1.1
+
+* Adding travis CI build support for 2.6/2.7 testing
+
 0.1.0
 
 * Added log naming helper functions to mandrel.config.helpers
