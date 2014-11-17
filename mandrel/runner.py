@@ -86,11 +86,11 @@ class AbstractRunner(object):
 
     def run(self):
         target, args = self.process_options()
-        self.execute(target, args)
+        return self.execute(target, args)
 
     @classmethod
     def launch(cls):
-        cls().run()
+        return cls().run()
 
 
 class CallableRunner(AbstractRunner):
@@ -117,8 +117,7 @@ class ScriptRunner(AbstractRunner):
 
 
 def launch_callable():
-    CallableRunner.launch()
+    return CallableRunner.launch()
 
 def launch_script():
-    ScriptRunner.launch()
-
+    return ScriptRunner.launch()
