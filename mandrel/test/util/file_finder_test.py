@@ -14,7 +14,7 @@ def scenario(**files_to_levels):
             levels.append(b)
             with utils.tempdir() as c:
                 levels.append(c)
-                for name, dirs in files_to_levels.items():
+                for name, dirs in list(files_to_levels.items()):
                     for level in dirs:
                         with open(os.path.join(levels[level], name), 'w') as f:
                             f.write(str(level))
@@ -32,21 +32,21 @@ def get_level(path):
 class TestFileFinder(unittest.TestCase):
     def testSingleFindOneMatch(self):
         with scenario(**{'a.txt': (0, 1, 2), 'b.foo': (1, 2), 'c.bar': (2,)}) as dirs:
-            for name, level in {'a.txt': 0, 'b.foo': 1, 'c.bar': 2}.items():
+            for name, level in list({'a.txt': 0, 'b.foo': 1, 'c.bar': 2}.items()):
                 result = tuple(util.find_files(name, dirs, matches=1))
                 self.assertEqual(1, len(result))
                 self.assertEqual(level, get_level(result[0]))
 
     def testSingleFindTwoMatch(self):
         with scenario(**{'0.x': (0,), 'a.txt': (0, 1, 2), 'b.foo': (1, 2), 'c.bar': (2,)}) as dirs:
-            for name, levels in {'0.x': (0,), 'a.txt': (0, 1), 'b.foo': (1, 2), 'c.bar': (2,)}.items():
+            for name, levels in list({'0.x': (0,), 'a.txt': (0, 1), 'b.foo': (1, 2), 'c.bar': (2,)}.items()):
                 got = tuple(get_level(r) for r in util.find_files(name, dirs, matches=2))
                 self.assertEqual(levels, got)
 
     def testSingleFindMultiMatch(self):
         mapping = {'0.x': (0,), 'a.txt': (0, 1), 'b.blah': (0, 1, 2), 'c.pork': (1, 2), 'd.plonk': (1,), 'e.sporks': (2,)}
         with scenario(**mapping) as dirs:
-            for name, levels in mapping.items():
+            for name, levels in list(mapping.items()):
                 got = tuple(get_level(r) for r in util.find_files(name, dirs))
                 self.assertEqual(levels, got)
 

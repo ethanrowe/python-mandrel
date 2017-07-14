@@ -1,13 +1,20 @@
-import contextlib
 import unittest
+
 import mock
+
 import mandrel
 from mandrel import exception
-from mandrel.test import utils
+
+try:
+    # python 3 compatibility
+    from importlib import reload
+except ImportError:
+    pass
+
 
 def scenario(func):
     def wrapper(*a, **kw):
-        with mock.patch('mandrel.bootstrap') as bootstrap:
+        with mock.patch('mandrel.bootstrap', create=True) as bootstrap:
             if hasattr(mandrel, 'config'):
                 reload(mandrel.config.core)
                 reload(mandrel.config)
@@ -48,7 +55,7 @@ class TestConfigLoaderFunctionality(unittest.TestCase):
     def testFindConfigurationFiles(self):
         with mock.patch('mandrel.util.find_files') as find_files:
             with mock.patch('mandrel.config.core.get_possible_basenames') as get_possible_basenames:
-                exts = [mock.Mock(name='Extension%d' % x) for x in xrange(3)]
+                exts = [mock.Mock(name='Extension%d' % x) for x in range(3)]
                 mandrel.config.core.LOADERS = [(ext, mock.Mock(name='Reader')) for ext in exts]
                 mandrel.bootstrap.SEARCH_PATHS = mock.Mock()
                 name = mock.Mock(name='FileBase')
@@ -60,7 +67,7 @@ class TestConfigLoaderFunctionality(unittest.TestCase):
     @scenario
     def testFindConfigurationFileWithMatch(self):
         with mock.patch('mandrel.config.core.find_configuration_files') as find_configuration_files:
-            paths = [mock.Mock(name='Path%d' % x) for x in xrange(10)]
+            paths = [mock.Mock(name='Path%d' % x) for x in range(10)]
             find_configuration_files.side_effect = lambda x: iter(paths)
             name = mock.Mock(name='SomeBase')
             result = mandrel.config.core.find_configuration_file(name)
@@ -76,11 +83,11 @@ class TestConfigLoaderFunctionality(unittest.TestCase):
 
     @scenario
     def testGetLoader(self):
-        exts = [str(mock.Mock(name='Extension%d' % x)) for x in xrange(3)]
-        loaders = [mock.Mock(name='Loader%d' % x) for x in xrange(len(exts))]
-        mandrel.config.core.LOADERS = zip(exts, loaders)
+        exts = [str(mock.Mock(name='Extension%d' % x)) for x in range(3)]
+        loaders = [mock.Mock(name='Loader%d' % x) for x in range(len(exts))]
+        mandrel.config.core.LOADERS = list(zip(exts, loaders))
 
-        for i in xrange(len(exts)):
+        for i in range(len(exts)):
             ext, loader = mandrel.config.core.LOADERS[i]
             path = '%s.%s' % (mock.Mock(name='someFile'), ext)
             result = mandrel.config.core.get_loader(path)

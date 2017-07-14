@@ -30,7 +30,7 @@ class TestLoaderFunctions(unittest.TestCase):
         callback = mock.Mock(name='Callback')
         harness = util.harness_loader(loader)(callback)
         name = mock.Mock(name='Plugin')
-        args = [mock.Mock(name='Arg%d' % x) for x in xrange(3)]
+        args = [mock.Mock(name='Arg%d' % x) for x in range(3)]
 
         result = harness(name)
         loader.assert_called_once_with(name)

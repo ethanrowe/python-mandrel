@@ -31,6 +31,12 @@ def scenario(*opts, **driver_opt):
 
 KNOWN_PATH = os.path.realpath('')
 
+if sys.version_info[0] > 2:
+    builtin_name = 'builtins'
+else:
+    builtin_name = '__builtin__'
+
+
 class TestRunner(unittest.TestCase):
     @scenario('-s', 'foo:bar:bah:', 'gloof', 'glof', 'floo', ensure_target=False)
     def testSearchPathSet(self, path):
@@ -74,7 +80,7 @@ class TestRunner(unittest.TestCase):
     @mock.patch.object(runner.AbstractRunner, 'process_options')
     @mock.patch.object(runner.AbstractRunner, 'execute')
     def testOrderOfOperations(self, path, execute, process_options):
-        mocks = [mock.Mock('positional%d' % x) for x in xrange(4)]
+        mocks = [mock.Mock('positional%d' % x) for x in range(4)]
         target = mocks.pop(0)
         process_options.return_value = (target, mocks)
         runner.AbstractRunner().run()
@@ -90,7 +96,7 @@ class TestRunner(unittest.TestCase):
     @scenario()
     def testImporting(self, _):
         obj = runner.AbstractRunner()
-        with mock.patch('__builtin__.__import__') as importer:
+        with mock.patch(builtin_name + '.__import__') as importer:
             self.assertEqual(importer.return_value.bootstrap, obj.bootstrapper)
             importer.assert_called_once_with('mandrel.bootstrap')
 
@@ -102,18 +108,18 @@ class TestRunner(unittest.TestCase):
     @mock.patch('mandrel.util.get_by_fqn')
     def testCallableRunner(self, get_by_fqn):
         target = str(mock.Mock(name='MockTarget'))
-        opts = [str(mock.Mock(name='Arg%d' % x)) for x in xrange(3)]
+        opts = [str(mock.Mock(name='Arg%d' % x)) for x in range(3)]
         result = runner.CallableRunner().execute(target, opts)
         get_by_fqn.assert_called_once_with(target)
         get_by_fqn.return_value.assert_called_once_with(opts)
         self.assertEqual(get_by_fqn.return_value.return_value, result)
 
-    @mock.patch('__builtin__.globals')
+    @mock.patch(builtin_name + '.globals')
     @mock.patch('sys.argv', new=['foo', 'bar', 'bah'])
-    @mock.patch('__builtin__.execfile')
+    @mock.patch('mandrel.runner.ScriptRunner.execute_script')
     def testScriptRunner(self, mock_exec, mock_globals):
         target = str(mock.Mock(name='MockTarget'))
-        opts = [str(mock.Mock(name='Arg%d' % x)) for x in xrange(3)]
+        opts = [str(mock.Mock(name='Arg%d' % x)) for x in range(3)]
         glb = {'foo': mock.Mock(), 'bar': mock.Mock(), '__file__': mock.Mock(), '__name__': mock.Mock()}
         mock_globals.side_effect = lambda: dict(glb)
         exp = dict(glb)
@@ -121,7 +127,7 @@ class TestRunner(unittest.TestCase):
         exp['__name__'] = '__main__'
 
         result = runner.ScriptRunner().execute(target, opts)
-        mock_exec.assert_called_once_with(target, exp)
+        mock_exec.assert_called_once_with(target)
         self.assertEqual(mock_exec.return_value, result)
         # Should add args at sys.argv[1:]
         self.assertEqual(['foo'] + opts, sys.argv)
