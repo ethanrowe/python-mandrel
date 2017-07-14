@@ -81,7 +81,7 @@ def find_configuration_file(name):
     """
     for path in find_configuration_files(name):
         return path
-    raise exception.UnknownConfigurationException, "No configuration file found for name '%s'" % name
+    raise exception.UnknownConfigurationException("No configuration file found for name '%s'" % name)
 
 def get_loader(path):
     """Gets the configuration loader for path according to file extension.
@@ -98,7 +98,7 @@ def get_loader(path):
         fullext = '.' + ext
         if path[-len(fullext):] == fullext:
             return loader
-    raise exception.UnknownConfigurationException, "No configuration loader found for path '%s'" % path
+    raise exception.UnknownConfigurationException("No configuration loader found for path '%s'" % path)
 
 def load_configuration_file(path):
     """Loads the configuration at path and returns it.
@@ -267,7 +267,7 @@ class Configuration(object):
             except AttributeError:
                 pass
 
-        raise AttributeError, 'No such attribute: %s' % attribute
+        raise AttributeError('No such attribute: %s' % attribute)
 
     def __getattr__(self, attr):
         return self.chained_get(attr)

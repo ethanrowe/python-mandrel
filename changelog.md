@@ -1,4 +1,8 @@
-2.0.0
+0.3.0
+
+* Python 3 support
+
+0.2.0
 
 * mandrel-runner uses return value of callable as the exit code.
 

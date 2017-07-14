@@ -109,7 +109,12 @@ class ScriptRunner(AbstractRunner):
     def execute_script(self, script):
         glb = globals()
         glb.update(__name__='__main__', __file__=script)
-        return execfile(script, glb)
+        if sys.version_info[0] > 2:
+            import builtins
+            execf = getattr(builtins, 'exec')
+            return execf(compile(open(script).read(), script, 'exec'), glb)
+        else:
+            return execfile(script, glb)
 
     def execute(self, target, args):
         self.prepare_environment(args)

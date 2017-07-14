@@ -1,5 +1,13 @@
 import os
 import re
+import sys
+
+
+if sys.version_info[0] == 2:
+    string_type = basestring
+else:
+    string_type = str
+
 
 class TransformingList(object):
     __slots__ = ('_list', '_transformer')
@@ -9,7 +17,10 @@ class TransformingList(object):
         self._transformer = transformer
 
     def __setitem__(self, i, y):
-        self._list[i] = self._transformer(y)
+        if isinstance(i, slice):
+            self._list[i] = (self._transformer(v) for v in y)
+        else:
+            self._list[i] = self._transformer(y)
 
     def __setslice__(self, i, j, y):
         self._list[i:j] = (self._transformer(v) for v in y)
@@ -72,7 +83,7 @@ def find_files(name_or_names, paths, matches=None):
     yielded value is the full path to a matching file.
     """
 
-    if isinstance(name_or_names, basestring):
+    if isinstance(name_or_names, string_type):
         name_or_names = [name_or_names]
 
     if matches is None:
@@ -138,9 +149,9 @@ def convention_loader(format_string):
     not contain one and only one '%s' within it.
     """
     if not format_string:
-        raise TypeError, 'format_string cannot be blank'
+        raise TypeError('format_string cannot be blank')
     if re.findall('%.', format_string) != ['%s']:
-        raise TypeError, 'format_string must contain one and only one "%s" token'
+        raise TypeError('format_string must contain one and only one "%s" token')
 
     def func(name):
         return get_by_fqn(format_string % name)

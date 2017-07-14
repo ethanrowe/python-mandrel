@@ -5,6 +5,12 @@ import tempfile
 import mandrel
 import unittest
 
+try:
+    # python 3 compatibility
+    from importlib import reload
+except ImportError:
+    pass
+
 class TestCase(unittest.TestCase):
     def assertIs(self, a, b):
         # python 2.6/2.7 compatibility

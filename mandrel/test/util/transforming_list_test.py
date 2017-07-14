@@ -6,14 +6,14 @@ from mandrel import util
 _trans_count = itertools.count(0)
 
 def mock_transform():
-    t = mock.Mock(name='MockTransform%d' % _trans_count.next())
+    t = mock.Mock(name='MockTransform%d' % next(_trans_count))
     t.side_effect = lambda v: v.transformed
     return t
 
 _vals_count = itertools.count(0)
 
 def mock_value():
-    return mock.Mock(name='MockValue%d' % _vals_count.next())
+    return mock.Mock(name='MockValue%d' % next(_vals_count))
 
 class TestTransformingList(unittest.TestCase):
     def testAppendBasics(self):
@@ -33,7 +33,7 @@ class TestTransformingList(unittest.TestCase):
     def testAccessBasics(self):
         t = mock_transform()
         l = util.TransformingList(t)
-        vals = [mock_value() for i in xrange(5)]
+        vals = [mock_value() for i in range(5)]
         l[0:3] = vals[0:3]
         self.assertEqual(3, len(l))
         self.assertEqual(tuple(v.transformed for v in vals[0:3]), tuple(l))
@@ -51,7 +51,7 @@ class TestTransformingList(unittest.TestCase):
 
     def testExtend(self):
         t = mock_transform()
-        vals = [mock_value() for i in xrange(5)]
+        vals = [mock_value() for i in range(5)]
         exp = tuple(v.transformed for v in vals)
         l = util.TransformingList(t)
         l.extend(vals)
@@ -64,7 +64,7 @@ class TestTransformingList(unittest.TestCase):
 
     def testInsertPop(self):
         t = mock_transform()
-        a, b, c = (mock_value() for i in xrange(3))
+        a, b, c = (mock_value() for i in range(3))
         l = util.TransformingList(t)
         l.append(a)
         l.append(b)
@@ -77,7 +77,7 @@ class TestTransformingList(unittest.TestCase):
 
     def testContainment(self):
         t = mock_transform()
-        vals = [mock_value() for i in xrange(5)]
+        vals = [mock_value() for i in range(5)]
         l = util.TransformingList(t)
         member = lambda v: v in l
         self.assertFalse(member(vals[0]))

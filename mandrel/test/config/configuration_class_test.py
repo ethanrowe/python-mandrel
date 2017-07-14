@@ -1,8 +1,9 @@
-import unittest
 import mock
+
 import mandrel.config
-from mandrel.test import utils
 from mandrel import exception
+from mandrel.test import utils
+
 
 class TestConfigurationClass(utils.TestCase):
     @mock.patch('mandrel.config.core.get_configuration')
@@ -21,7 +22,7 @@ class TestConfigurationClass(utils.TestCase):
             result = mandrel.config.core.Configuration.get_logger_name('some.nested.name')
             self.assertEqual(mock_name + '.some.nested.name', result)
 
-    @mock.patch('mandrel.bootstrap')
+    @mock.patch('mandrel.bootstrap', create=True)
     @mock.patch('mandrel.config.core.Configuration.get_logger_name')
     def testGetLogger(self, get_logger_name, bootstrap):
         mock_name = str(mock.Mock(name='AnotherMockConfigurationName'))
@@ -45,7 +46,7 @@ class TestConfigurationClass(utils.TestCase):
         self.assertEqual(config, c.configuration)
         self.assertEqual((), c.chain)
 
-        chain = tuple(mock.Mock(name='Chain%d' % x) for x in xrange(3))
+        chain = tuple(mock.Mock(name='Chain%d' % x) for x in range(3))
         c = mandrel.config.core.Configuration(config, *chain)
         self.assertEqual(config, c.configuration)
         self.assertEqual(chain, c.chain)
@@ -136,7 +137,7 @@ class TestConfigurationClass(utils.TestCase):
         self.assertEqual(loader.return_value, c.configuration)
         self.assertEqual((), c.chain)
 
-        chain = tuple(mock.Mock() for x in xrange(5))
+        chain = tuple(mock.Mock() for x in range(5))
         c = mandrel.config.core.Configuration.get_configuration(*chain)
         self.assertEqual(loader.return_value, c.configuration)
         self.assertEqual(chain, c.chain)

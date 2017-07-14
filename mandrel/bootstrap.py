@@ -47,7 +47,7 @@ def find_logging_configuration():
     """
     for path in util.find_files(LOGGING_CONFIG_BASENAME, SEARCH_PATHS, matches=1):
         return path
-    raise exception.UnknownConfigurationException, "Cannot find logging configuration file(s) '%s'" % LOGGING_CONFIG_BASENAME
+    raise exception.UnknownConfigurationException("Cannot find logging configuration file(s) '%s'" % LOGGING_CONFIG_BASENAME)
 
 DEFAULT_LOGGING_CALLBACK = initialize_simple_logging
 DISABLE_EXISTING_LOGGERS = True
@@ -109,7 +109,7 @@ def _find_bootstrap_base():
     while not os.path.isfile(os.path.join(current, __BOOTSTRAP_BASENAME)):
         parent = os.path.dirname(current)
         if parent == current:
-            raise exception.MissingBootstrapException, 'Cannot find %s file in directory hierarchy' % __BOOTSTRAP_BASENAME
+            raise exception.MissingBootstrapException('Cannot find %s file in directory hierarchy' % __BOOTSTRAP_BASENAME)
         current = parent
 
     return current, os.path.join(current, __BOOTSTRAP_BASENAME)
