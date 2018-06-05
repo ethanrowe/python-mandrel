@@ -121,8 +121,35 @@ class ScriptRunner(AbstractRunner):
         return self.execute_script(target)
 
 
+def _convert_status(status):
+    """
+    Converts the return value from a callable or script into a status that allows code
+    expecting mandrel-0.1.0 behavior (which ignored returns) to behave properly
+    with the latest code the interprets the return as a status code.
+
+    :param status: anything that might have been returned by code
+    :return: 0 if the code should be thought of as successful, 1 if failed, or the status itself if already an integer
+    """
+    if status is True:
+        # Exactly True is successful
+        return 0
+    elif status is False:
+        # Exactly False is failed
+        return 1
+    elif status is None:
+        # A function completing with no return is considered successful
+        return 0
+    elif isinstance(status, int):
+        # Any other integer return is deemed a status
+        return status
+    else:
+        # Anything else is treated as successful
+        return 0
+
+
 def launch_callable():
-    return CallableRunner.launch()
+    return _convert_status(CallableRunner.launch())
+
 
 def launch_script():
-    return ScriptRunner.launch()
+    return _convert_status(ScriptRunner.launch())
