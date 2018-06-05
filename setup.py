@@ -3,7 +3,7 @@ import os
 
 setup(
     name = "mandrel",
-    version = "0.3.0",
+    version = "1.0.0",
     author = "Ethan Rowe",
     author_email = "ethan@the-rowes.com",
     description = ("Provides bootstrapping for sane configuration management"),
