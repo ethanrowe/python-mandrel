@@ -1,3 +1,7 @@
+CURRENT
+
+* Compatibility enhancements to allow code expecting 0.1.0 behavior to work with 0.3.0+
+
 0.3.0
 
 * Python 3 support
