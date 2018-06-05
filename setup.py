@@ -23,6 +23,15 @@ setup(
 Mandrel provides bootstrapping and configuration tools for consistent,
 straightforward project config management.
 
+**Mandrel is a highly idiosyncratic way to organize stuff and is ultimately
+counterproductive.  The author and maintainer recommends against its continued
+use.  This project is in maintenance mode only and the author cannot stress
+enough the degree to which alternate approaches to bootstrapping should be
+found.  Don't use mandrel for new work.  Deprecate its use where you can.
+(FWIW, the author prefers to drive configuration via environment variables,
+generally speaking, and only use specialized file-based config with JSON or
+YAML if the configuration needs are especially nuanced.)**
+
 Use Mandrel to:
 
 * bootstrap your python project configuration
