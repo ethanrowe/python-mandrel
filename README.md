@@ -1,3 +1,13 @@
+# You Shouldn't Use This.
+
+*A special note from the author and maintainer...*
+
+> This project was conceived to make a bunch of poorly factored apps work a little better.
+> 
+> It succeeded at that effort to some extent, but it's fundamentally a crappy way to do config.
+> 
+> If you're using this in 2020, that really sucks.  Change.
+
 # Mandrel (python-mandrel) #
 
 Mandrel provides bootstrapping and configuration tools for consistent,
