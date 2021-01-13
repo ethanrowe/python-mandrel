@@ -6,7 +6,7 @@
 > 
 > It succeeded at that effort to some extent, but it's fundamentally a crappy way to do config.
 > 
-> If you're using this in 2020, that really sucks.  Change.
+> If you're using this in or after 2020, that really sucks.  Change.
 
 # Mandrel (python-mandrel) #
 
